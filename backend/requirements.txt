@@ -1,0 +1,24 @@
+# FastAPI
+fastapi
+uvicorn[standard]
+python-multipart
+websockets
+
+# Gemini API
+google-genai
+
+# Database
+sqlalchemy[asyncio]
+aiosqlite
+
+# ML Libraries (core)
+pandas
+numpy
+scikit-learn
+
+# Data Processing
+openpyxl
+
+# Configuration
+pydantic-settings
+python-dotenv

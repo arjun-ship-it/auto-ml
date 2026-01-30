@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+*.db
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# ML artifacts
+uploads/
+trained_models/
+*.pkl
+*.h5
+*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
