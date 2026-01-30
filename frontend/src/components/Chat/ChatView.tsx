@@ -75,6 +75,7 @@ export default function ChatView({ projectId }: ChatViewProps) {
   }, [messages])
 
   const handleSend = () => {
+    console.log('[ChatView] handleSend called:', { input, projectId, isLoading, isConnected })
     if (!input.trim() || !projectId || isLoading) return
 
     const userMessage: Message = {

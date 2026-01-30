@@ -28,14 +28,17 @@ export function useWebSocket(
   const connect = useCallback(() => {
     if (!projectId) return
 
+    console.log('[WS] Connecting to:', `${WS_URL}/ws/chat/${projectId}`)
     const ws = new WebSocket(`${WS_URL}/ws/chat/${projectId}`)
 
     ws.onopen = () => {
+      console.log('[WS] Connection opened')
       setIsConnected(true)
       options.onConnect?.()
     }
 
     ws.onmessage = (event) => {
+      console.log('[WS] Message received:', event.data)
       try {
         const data = JSON.parse(event.data)
         options.onMessage(data)
@@ -45,11 +48,12 @@ export function useWebSocket(
     }
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
+      console.error('[WS] WebSocket error:', error)
       options.onError?.(error)
     }
 
     ws.onclose = () => {
+      console.log('[WS] Connection closed')
       setIsConnected(false)
       options.onDisconnect?.()
 
@@ -74,10 +78,17 @@ export function useWebSocket(
   }, [connect])
 
   const sendMessage = useCallback((message: string) => {
+    console.log('[WS] sendMessage called:', {
+      message,
+      readyState: wsRef.current?.readyState,
+      isOpen: wsRef.current?.readyState === WebSocket.OPEN
+    })
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ message }))
+      const payload = JSON.stringify({ message })
+      console.log('[WS] Sending payload:', payload)
+      wsRef.current.send(payload)
     } else {
-      console.error('WebSocket is not connected')
+      console.error('[WS] WebSocket is not connected, readyState:', wsRef.current?.readyState)
     }
   }, [])
 

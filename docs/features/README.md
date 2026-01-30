@@ -16,6 +16,7 @@ This directory contains feature specifications for the AutoML Agent project.
 | Status | Feature | Spec | Owner | Created |
 |--------|---------|------|-------|---------|
 | Done | Initial Setup | - | - | 2025-01-30 |
+| In Progress | WebSocket Debug Logging | [websocket-debug-logging.md](websocket-debug-logging.md) | Claude | 2026-01-30 |
 
 ## Status Legend
 
