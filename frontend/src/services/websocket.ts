@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
 
+// Debug logging helper - only logs in development mode
+const debugLog = (...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args)
+  }
+}
+
 interface WebSocketMessage {
   type: string
   content?: string
@@ -28,17 +35,17 @@ export function useWebSocket(
   const connect = useCallback(() => {
     if (!projectId) return
 
-    console.log('[WS] Connecting to:', `${WS_URL}/ws/chat/${projectId}`)
+    debugLog('[WS] Connecting to:', `${WS_URL}/ws/chat/${projectId}`)
     const ws = new WebSocket(`${WS_URL}/ws/chat/${projectId}`)
 
     ws.onopen = () => {
-      console.log('[WS] Connection opened')
+      debugLog('[WS] Connection opened')
       setIsConnected(true)
       options.onConnect?.()
     }
 
     ws.onmessage = (event) => {
-      console.log('[WS] Message received:', event.data)
+      debugLog('[WS] Message received, length:', event.data?.length)
       try {
         const data = JSON.parse(event.data)
         options.onMessage(data)
@@ -53,7 +60,7 @@ export function useWebSocket(
     }
 
     ws.onclose = () => {
-      console.log('[WS] Connection closed')
+      debugLog('[WS] Connection closed')
       setIsConnected(false)
       options.onDisconnect?.()
 
@@ -78,14 +85,14 @@ export function useWebSocket(
   }, [connect])
 
   const sendMessage = useCallback((message: string) => {
-    console.log('[WS] sendMessage called:', {
-      message,
+    debugLog('[WS] sendMessage called:', {
+      messageLength: message.length,
       readyState: wsRef.current?.readyState,
       isOpen: wsRef.current?.readyState === WebSocket.OPEN
     })
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const payload = JSON.stringify({ message })
-      console.log('[WS] Sending payload:', payload)
+      debugLog('[WS] Sending payload of length:', payload.length)
       wsRef.current.send(payload)
     } else {
       console.error('[WS] WebSocket is not connected, readyState:', wsRef.current?.readyState)

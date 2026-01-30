@@ -3,11 +3,17 @@ import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.agent import AutoMLAgent
+from app.config import settings
 
 router = APIRouter()
 
 # Configure logger for WebSocket debugging
+# Log level is controlled by DEBUG setting
 logger = logging.getLogger(__name__)
+if settings.DEBUG:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.WARNING)
 
 
 class ConnectionManager:
@@ -91,6 +97,6 @@ async def websocket_chat(websocket: WebSocket, project_id: str):
         logger.error("[WS] Error occurred: %s", str(e), exc_info=True)
         await manager.send_json(websocket, {
             "type": "error",
-            "content": str(e),
+            "content": "An internal error occurred",
         })
         manager.disconnect(websocket, project_id)
