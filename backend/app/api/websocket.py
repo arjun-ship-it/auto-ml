@@ -1,9 +1,13 @@
 import json
+import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.agent import AutoMLAgent
 
 router = APIRouter()
+
+# Configure logger for WebSocket debugging
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -34,24 +38,24 @@ manager = ConnectionManager()
 @router.websocket("/chat/{project_id}")
 async def websocket_chat(websocket: WebSocket, project_id: str):
     """WebSocket endpoint for real-time chat with the agent."""
-    print(f"[WS] New connection for project: {project_id}")
+    logger.info("[WS] New connection for project: %s", project_id)
     await manager.connect(websocket, project_id)
 
     # Initialize agent
-    print(f"[WS] Initializing agent for project: {project_id}")
+    logger.info("[WS] Initializing agent for project: %s", project_id)
     agent = AutoMLAgent(project_id)
     await agent.initialize()
-    print(f"[WS] Agent initialized, waiting for messages...")
+    logger.info("[WS] Agent initialized, waiting for messages...")
 
     try:
         while True:
             # Receive message from client
-            print("[WS] Waiting for message...")
+            logger.debug("[WS] Waiting for message...")
             data = await websocket.receive_text()
-            print(f"[WS] Received raw data: {data}")
+            logger.debug("[WS] Received data of length: %d", len(data))
             message = json.loads(data)
             user_message = message.get("message", "")
-            print(f"[WS] Parsed user message: {user_message}")
+            logger.info("[WS] Received message of length: %d", len(user_message))
 
             if not user_message:
                 await manager.send_json(websocket, {
@@ -61,30 +65,30 @@ async def websocket_chat(websocket: WebSocket, project_id: str):
                 continue
 
             # Send acknowledgment
-            print("[WS] Sending processing status...")
+            logger.debug("[WS] Sending processing status...")
             await manager.send_json(websocket, {
                 "type": "status",
                 "content": "processing",
             })
 
             # Process message and stream responses
-            print("[WS] Processing message with agent...")
+            logger.info("[WS] Processing message with agent...")
             async for chunk in agent.process_message(user_message):
-                print(f"[WS] Sending chunk: {chunk}")
+                logger.debug("[WS] Sending chunk of type: %s", chunk.get("type"))
                 await manager.send_json(websocket, chunk)
 
             # Send completion signal
-            print("[WS] Sending done signal...")
+            logger.info("[WS] Sending done signal...")
             await manager.send_json(websocket, {
                 "type": "done",
                 "content": "Message processed",
             })
 
     except WebSocketDisconnect:
-        print(f"[WS] Client disconnected from project: {project_id}")
+        logger.info("[WS] Client disconnected from project: %s", project_id)
         manager.disconnect(websocket, project_id)
     except Exception as e:
-        print(f"[WS] Error occurred: {e}")
+        logger.error("[WS] Error occurred: %s", str(e), exc_info=True)
         await manager.send_json(websocket, {
             "type": "error",
             "content": str(e),
