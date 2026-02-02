@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
 
+// Debug logging helper - only logs in development mode
+export const debugLog = (...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.log(...args)
+  }
+}
+
 interface WebSocketMessage {
   type: string
   content?: string
@@ -28,14 +35,17 @@ export function useWebSocket(
   const connect = useCallback(() => {
     if (!projectId) return
 
+    debugLog('[WS] Connecting to:', `${WS_URL}/ws/chat/${projectId}`)
     const ws = new WebSocket(`${WS_URL}/ws/chat/${projectId}`)
 
     ws.onopen = () => {
+      debugLog('[WS] Connection opened')
       setIsConnected(true)
       options.onConnect?.()
     }
 
     ws.onmessage = (event) => {
+      debugLog('[WS] Message received, length:', event.data?.length)
       try {
         const data = JSON.parse(event.data)
         options.onMessage(data)
@@ -45,11 +55,12 @@ export function useWebSocket(
     }
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
+      console.error('[WS] WebSocket error:', error)
       options.onError?.(error)
     }
 
     ws.onclose = () => {
+      debugLog('[WS] Connection closed')
       setIsConnected(false)
       options.onDisconnect?.()
 
@@ -74,10 +85,17 @@ export function useWebSocket(
   }, [connect])
 
   const sendMessage = useCallback((message: string) => {
+    debugLog('[WS] sendMessage called:', {
+      messageLength: message.length,
+      readyState: wsRef.current?.readyState,
+      isOpen: wsRef.current?.readyState === WebSocket.OPEN
+    })
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ message }))
+      const payload = JSON.stringify({ message })
+      debugLog('[WS] Sending payload of length:', payload.length)
+      wsRef.current.send(payload)
     } else {
-      console.error('WebSocket is not connected')
+      console.error('[WS] WebSocket is not connected, readyState:', wsRef.current?.readyState)
     }
   }, [])
 

@@ -5,10 +5,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: automl-backend
     ports:
       - "8000:8000"
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_MODEL=gemini-2.0-flash
       - DATABASE_URL=sqlite+aiosqlite:///./automl.db
       - DEBUG=true
       - DOCKER_ENABLED=false
@@ -16,12 +18,12 @@ services:
       - ./backend:/app
       - backend_uploads:/app/uploads
       - backend_models:/app/trained_models
-    depends_on: []
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: automl-frontend
     ports:
       - "3000:3000"
     environment:
