@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader2, Upload } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
-import { useWebSocket } from '../../services/websocket'
+import { useWebSocket, debugLog } from '../../services/websocket'
 
 interface Message {
   id: string
@@ -75,7 +75,7 @@ export default function ChatView({ projectId }: ChatViewProps) {
   }, [messages])
 
   const handleSend = () => {
-    if (import.meta.env.DEV) { console.log('[ChatView] handleSend called:', { inputLength: input.length, projectId, isLoading, isConnected }) }
+    debugLog('[ChatView] handleSend called:', { inputLength: input.length, projectId, isLoading, isConnected })
     if (!input.trim() || !projectId || isLoading) return
 
     const userMessage: Message = {

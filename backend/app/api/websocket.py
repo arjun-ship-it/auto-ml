@@ -30,7 +30,8 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket, project_id: str):
         if project_id in self.active_connections:
-            self.active_connections[project_id].remove(websocket)
+            if websocket in self.active_connections[project_id]:
+                self.active_connections[project_id].remove(websocket)
             if not self.active_connections[project_id]:
                 del self.active_connections[project_id]
 
@@ -47,13 +48,13 @@ async def websocket_chat(websocket: WebSocket, project_id: str):
     logger.info("[WS] New connection for project: %s", project_id)
     await manager.connect(websocket, project_id)
 
-    # Initialize agent
-    logger.info("[WS] Initializing agent for project: %s", project_id)
-    agent = AutoMLAgent(project_id)
-    await agent.initialize()
-    logger.info("[WS] Agent initialized, waiting for messages...")
-
     try:
+        # Initialize agent inside try block to ensure cleanup on failure
+        logger.info("[WS] Initializing agent for project: %s", project_id)
+        agent = AutoMLAgent(project_id)
+        await agent.initialize()
+        logger.info("[WS] Agent initialized, waiting for messages...")
+
         while True:
             # Receive message from client
             logger.debug("[WS] Waiting for message...")
@@ -92,11 +93,15 @@ async def websocket_chat(websocket: WebSocket, project_id: str):
 
     except WebSocketDisconnect:
         logger.info("[WS] Client disconnected from project: %s", project_id)
-        manager.disconnect(websocket, project_id)
     except Exception as e:
         logger.error("[WS] Error occurred: %s", str(e), exc_info=True)
-        await manager.send_json(websocket, {
-            "type": "error",
-            "content": "An internal error occurred",
-        })
+        try:
+            await manager.send_json(websocket, {
+                "type": "error",
+                "content": "An internal error occurred",
+            })
+        except Exception:
+            pass  # Connection may already be closed
+    finally:
+        # Always clean up the connection
         manager.disconnect(websocket, project_id)

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
 
 // Debug logging helper - only logs in development mode
-const debugLog = (...args: unknown[]) => {
+export const debugLog = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
     console.log(...args)
   }
